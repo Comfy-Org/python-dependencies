@@ -75,15 +75,14 @@ jobs:
         run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: mac-arm-deps-py3.${{ inputs.python_minor }}-${{ steps.date.outputs.date }}
-          release_name: Mac ARM Dependencies Python 3.${{ inputs.python_minor }} (${{ steps.date.outputs.date }})
+          tag: mac-arm-deps-py3.${{ inputs.python_minor }}-${{ steps.date.outputs.date }}
+          name: Mac ARM Dependencies Python 3.${{ inputs.python_minor }} (${{ steps.date.outputs.date }})
           body: |
             Mac ARM dependencies with Nightly PyTorch
+            
+            Build Date: ${{ steps.date.outputs.date }}
             
             Includes:
             - Python 3.${{ inputs.python_minor }} virtual environment
@@ -91,13 +90,5 @@ jobs:
             - ComfyUI requirements
           draft: false
           prerelease: true
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./mac_arm_python_env.tar.gz
-          asset_name: mac_arm_python_env.tar.gz
-          asset_content_type: application/gzip
+          artifacts: "mac_arm_python_env.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
