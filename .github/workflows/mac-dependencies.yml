@@ -17,11 +17,6 @@ on:
         required: true
         type: string
         default: "11"
-      python_patch:
-        description: 'python patch version'
-        required: true
-        type: string
-        default: "9"
 
 jobs:
   build_and_release_dependencies:
@@ -37,7 +32,7 @@ jobs:
           brew install miniforge
           conda init bash
           source ~/.bash_profile
-          conda create -n pytorch_env python=3.${{ inputs.python_minor }}.${{ inputs.python_patch }} -y
+          conda create -n pytorch_env python=3.${{ inputs.python_minor }} -y
           conda activate pytorch_env
           conda install pytorch torchvision torchaudio -c pytorch-nightly -y
           curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
@@ -55,8 +50,8 @@ jobs:
           cp -R $(conda info --base)/envs/pytorch_env/lib packaged_env/
           
           # Copy site-packages (our installed dependencies)
-          mkdir -p packaged_env/lib/python${{ inputs.python_minor }}.${{ inputs.python_patch }}/site-packages
-          cp -R $(conda info --base)/envs/pytorch_env/lib/python${{ inputs.python_minor }}.${{ inputs.python_patch }}/site-packages/* packaged_env/lib/python${{ inputs.python_minor }}.${{ inputs.python_patch }}/site-packages/
+          mkdir -p packaged_env/lib/python${{ inputs.python_minor }}/site-packages
+          cp -R $(conda info --base)/envs/pytorch_env/lib/python${{ inputs.python_minor }}/site-packages/* packaged_env/lib/python${{ inputs.python_minor }}/site-packages/
           
           # Copy our wheel files
           cp -R mac_arm_python_deps packaged_env/
@@ -69,13 +64,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: mac-arm-deps-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
-          release_name: Mac ARM Dependencies Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
+          tag_name: mac-arm-deps-py${{ inputs.python_minor }}-${{ github.run_number }}
+          release_name: Mac ARM Dependencies Python ${{ inputs.python_minor }} (Build ${{ github.run_number }})
           body: |
-            Mac ARM dependencies for Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} with PyTorch nightly
+            Mac ARM dependencies for Python ${{ inputs.python_minor }} with PyTorch nightly
             
             Includes:
-            - Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
+            - Python ${{ inputs.python_minor }}
             - PyTorch nightly dependencies
             - ComfyUI requirements
           draft: false
