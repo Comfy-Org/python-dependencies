@@ -77,13 +77,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: mac-arm-deps-py${{ inputs.python_minor }}-${{ github.run_number }}
-          release_name: Mac ARM Dependencies Python ${{ inputs.python_minor }} (Build ${{ github.run_number }})
+          tag_name: mac-arm-deps-py${{ inputs.python_minor }}
+          release_name: Mac ARM Dependencies Python ${{ inputs.python_minor }}
           body: |
             Mac ARM dependencies for Python ${{ inputs.python_minor }} with PyTorch nightly
             
             Includes:
-            - Python ${{ inputs.python_minor }}
+            - Python 3.${{ inputs.python_minor }}
             - PyTorch nightly dependencies
             - ComfyUI requirements
           draft: false
