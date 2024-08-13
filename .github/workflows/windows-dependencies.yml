@@ -33,30 +33,40 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.${{ inputs.python_minor }}.${{ inputs.python_patch }}
-      
-      - name: Download and prepare dependencies
+
+      - name: Download and extract embedded Python
         shell: bash
         run: |
-          echo "@echo off
-          call update_comfyui.bat nopause
-          echo -
-          echo This will try to update pytorch and all python dependencies.
-          echo -
-          echo If you just want to update normally, close this and run update_comfyui.bat instead.
-          echo -
-          pause
-          ..\python_embeded\python.exe -s -m pip install --upgrade torch torchvision torchaudio ${{ inputs.xformers }} --extra-index-url https://download.pytorch.org/whl/cu${{ inputs.cu }} -r ../ComfyUI/requirements.txt pygit2
-          pause" > update_comfyui_and_python_dependencies.bat
+          curl https://www.python.org/ftp/python/3.${{ inputs.python_minor }}.${{ inputs.python_patch }}/python-3.${{ inputs.python_minor }}.${{ inputs.python_patch }}-embed-amd64.zip -o python_embedded.zip
+          unzip python_embedded.zip -d python_embedded
+          cd python_embedded
           
-          python -m pip wheel --no-cache-dir torch torchvision torchaudio ${{ inputs.xformers }} ${{ inputs.extra_dependencies }} --extra-index-url https://download.pytorch.org/whl/cu${{ inputs.cu }} -r requirements.txt pygit2 -w ./cu${{ inputs.cu }}_python_deps
-          
-          echo "Installed dependencies:"
-          ls -lah cu${{ inputs.cu }}_python_deps
-          
-          tar czf cu${{ inputs.cu }}_python_deps.tar.gz cu${{ inputs.cu }}_python_deps update_comfyui_and_python_dependencies.bat
+          # Enable site-packages
+          sed -i 's/#import site/import site/' python*._pth
+
+      - name: Set up Python environment
+        shell: bash
+        run: |
+          cd python_embedded
+          ./python.exe -m ensurepip
+          ./python.exe -m pip install --upgrade pip
+
+      - name: Fetch ComfyUI requirements
+        shell: bash
+        run: |
+          curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          cd python_embedded
+          ./python.exe -m pip install torch torchvision torchaudio ${{ inputs.xformers }} --extra-index-url https://download.pytorch.org/whl/cu${{ inputs.cu }}
+          ./python.exe -m pip install ${{ inputs.extra_dependencies }} -r ../requirements.txt pygit2
+
+      - name: Package dependencies
+        shell: pwsh
+        run: |
+          Compress-Archive -Path python_embedded, requirements.txt -DestinationPath windows_python_deps.zip
 
       - name: Create Release
         id: create_release
@@ -70,9 +80,9 @@ jobs:
             Windows dependencies for CUDA ${{ inputs.cu }} and Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
             
             Includes:
-            - PyTorch dependencies
+            - Embedded Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
+            - PyTorch dependencies for CUDA ${{ inputs.cu }}
             - ComfyUI requirements
-            - Update script
           draft: false
           prerelease: true
 
@@ -82,6 +92,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./cu${{ inputs.cu }}_python_deps.tar.gz
-          asset_name: cu${{ inputs.cu }}_python_deps.tar.gz
-          asset_content_type: application/gzip
+          asset_path: ./windows_python_deps.zip
+          asset_name: windows_python_deps.zip
+          asset_content_type: application/zip

@@ -12,6 +12,16 @@ on:
         required: false
         type: string
         default: "\"numpy<2\""
+      python_minor:
+        description: 'python minor version'
+        required: true
+        type: string
+        default: "11"
+      python_patch:
+        description: 'python patch version'
+        required: true
+        type: string
+        default: "9"
 
 jobs:
   build_and_release_dependencies:
