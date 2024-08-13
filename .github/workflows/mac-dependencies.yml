@@ -40,7 +40,7 @@ jobs:
 
       - name: Create and activate conda environment
         run: |
-          conda create -n pytorch_env python=${{ inputs.python_minor }}.${{ inputs.python_patch }} -y
+          conda create -n pytorch_env python=3.${{ inputs.python_minor }}.${{ inputs.python_patch }} -y
           conda activate pytorch_env
 
       - name: Install PyTorch nightly
