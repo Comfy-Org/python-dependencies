@@ -7,6 +7,11 @@ on:
         required: true
         type: string
         default: "12"
+      extra_dependencies:
+        description: 'extra dependencies'
+        required: false
+        type: string
+        default: "\"numpy<2\""
 
 jobs:
   build_and_release_dependencies:
@@ -34,7 +39,7 @@ jobs:
         run: |
           source packaged_env/bin/activate
           curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
-          pip install -r requirements.txt
+          pip install ${{ inputs.extra_dependencies }} -r requirements.txt
 
       - name: Verify PyTorch installation
         run: |
