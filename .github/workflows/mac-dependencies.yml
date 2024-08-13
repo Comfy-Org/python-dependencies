@@ -50,7 +50,7 @@ jobs:
           cp -R $(conda info --base)/envs/pytorch_env/lib packaged_env/
           
           # Find the correct Python site-packages directory
-          SITE_PACKAGES_DIR=$(find $(conda info --base)/envs/pytorch_env/lib -maxdepth 1 -type d -name "python${{ inputs.python_minor }}*" | head -n 1)
+          SITE_PACKAGES_DIR=$(find $(conda info --base)/envs/pytorch_env/lib -maxdepth 1 -type d -name "python3.${{ inputs.python_minor }}*" | head -n 1)
           
           echo "Searched for Python ${{ inputs.python_minor }} site-packages directory"
           echo "Found: $SITE_PACKAGES_DIR"
