@@ -1,0 +1,98 @@
+name: "Mac ARM Release Dependencies"
+on:
+  workflow_dispatch:
+    inputs:
+      xformers:
+        description: 'xformers version'
+        required: false
+        type: string
+        default: ""
+      extra_dependencies:
+        description: 'extra dependencies'
+        required: false
+        type: string
+        default: "\"numpy<2\""
+
+jobs:
+  build_and_release_dependencies:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Install Miniforge
+        run: |
+          brew install miniforge
+          conda init bash
+          source ~/.bash_profile
+
+      - name: Create and activate conda environment
+        run: |
+          conda create -n pytorch_env python=${{ inputs.python_minor }}.${{ inputs.python_patch }} -y
+          conda activate pytorch_env
+
+      - name: Install PyTorch nightly
+        run: |
+          conda install pytorch torchvision torchaudio -c pytorch-nightly -y
+
+      - name: Fetch ComfyUI requirements
+        run: |
+          curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
+
+      - name: Install dependencies and create wheels
+        run: |
+          python -m pip install wheel
+          python -m pip wheel --no-cache-dir ${{ inputs.xformers }} ${{ inputs.extra_dependencies }} -r requirements.txt pygit2 -w ./mac_arm_python_deps
+          
+          echo "Installed dependencies:"
+          ls -lah mac_arm_python_deps
+
+      - name: Package Python and dependencies
+        run: |
+          # Create a directory for our packaged environment
+          mkdir -p packaged_env
+          
+          # Copy Python executable and standard library
+          cp -R $(conda info --base)/envs/pytorch_env/bin/python* packaged_env/
+          cp -R $(conda info --base)/envs/pytorch_env/lib packaged_env/
+          
+          # Copy site-packages (our installed dependencies)
+          mkdir -p packaged_env/lib/python${{ inputs.python_minor }}.${{ inputs.python_patch }}/site-packages
+          cp -R $(conda info --base)/envs/pytorch_env/lib/python${{ inputs.python_minor }}.${{ inputs.python_patch }}/site-packages/* packaged_env/lib/python${{ inputs.python_minor }}.${{ inputs.python_patch }}/site-packages/
+          
+          # Copy our wheel files
+          cp -R mac_arm_python_deps packaged_env/
+
+      - name: Package environment
+        run: |
+          tar czf mac_arm_python_env.tar.gz packaged_env
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: mac-arm-deps-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
+          release_name: Mac ARM Dependencies Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
+          body: |
+            Mac ARM dependencies for Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} with PyTorch nightly
+            
+            Includes:
+            - Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
+            - PyTorch nightly dependencies
+            - ComfyUI requirements
+          draft: false
+          prerelease: true
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./mac_arm_python_env.tar.gz
+          asset_name: mac_arm_python_env.tar.gz
+          asset_content_type: application/gzip
