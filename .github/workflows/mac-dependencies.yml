@@ -37,30 +37,16 @@ jobs:
           brew install miniforge
           conda init bash
           source ~/.bash_profile
-
-      - name: Create and activate conda environment
-        run: |
           conda create -n pytorch_env python=3.${{ inputs.python_minor }}.${{ inputs.python_patch }} -y
           conda activate pytorch_env
-
-      - name: Install PyTorch nightly
-        run: |
           conda install pytorch torchvision torchaudio -c pytorch-nightly -y
-
-      - name: Fetch ComfyUI requirements
-        run: |
           curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
-
-      - name: Install dependencies and create wheels
-        run: |
           python -m pip install wheel
           python -m pip wheel --no-cache-dir ${{ inputs.xformers }} ${{ inputs.extra_dependencies }} -r requirements.txt pygit2 -w ./mac_arm_python_deps
           
           echo "Installed dependencies:"
           ls -lah mac_arm_python_deps
 
-      - name: Package Python and dependencies
-        run: |
           # Create a directory for our packaged environment
           mkdir -p packaged_env
           
@@ -75,8 +61,6 @@ jobs:
           # Copy our wheel files
           cp -R mac_arm_python_deps packaged_env/
 
-      - name: Package environment
-        run: |
           tar czf mac_arm_python_env.tar.gz packaged_env
 
       - name: Create Release
