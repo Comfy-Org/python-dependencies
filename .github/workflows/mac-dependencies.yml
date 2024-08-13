@@ -1,75 +1,73 @@
-name: "Mac ARM Release Dependencies"
+name: "Mac ARM Release Dependencies with Nightly PyTorch"
 on:
   workflow_dispatch:
     inputs:
-      xformers:
-        description: 'xformers version'
-        required: false
-        type: string
-        default: ""
-      extra_dependencies:
-        description: 'extra dependencies'
-        required: false
-        type: string
-        default: "\"numpy<2\""
       python_minor:
         description: 'python minor version'
         required: true
         type: string
-        default: "11"
+        default: "12"
 
 jobs:
   build_and_release_dependencies:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
 
-      - name: Install Miniforge
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.${{ inputs.python_minor }}'
+
+      - name: Create virtual environment
         run: |
-          brew install miniforge
-          conda init bash
-          source ~/.bash_profile
-          conda create -n pytorch_env python=3.${{ inputs.python_minor }} -y
-          conda activate pytorch_env
-          conda install pytorch torchvision torchaudio -c pytorch-nightly -y
+          python -m venv packaged_env
+          source packaged_env/bin/activate
+          python -m pip install --upgrade pip
+
+      - name: Install PyTorch nightly
+        run: |
+          source packaged_env/bin/activate
+          pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
+
+      - name: Fetch and install ComfyUI requirements
+        run: |
+          source packaged_env/bin/activate
           curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
-          python -m pip install wheel
-          python -m pip wheel --no-cache-dir ${{ inputs.xformers }} ${{ inputs.extra_dependencies }} -r requirements.txt pygit2 -w ./mac_arm_python_deps
-          
-          echo "Installed dependencies:"
-          ls -lah mac_arm_python_deps
+          pip install -r requirements.txt
 
-          # Create a directory for our packaged environment
-          mkdir -p packaged_env
-          
-           # Copy Python executable and standard library
-          cp -R $(conda info --base)/envs/pytorch_env/bin/python* packaged_env/
-          cp -R $(conda info --base)/envs/pytorch_env/lib packaged_env/
-          
-          # Find the correct Python site-packages directory
-          SITE_PACKAGES_DIR=$(find $(conda info --base)/envs/pytorch_env/lib -maxdepth 1 -type d -name "python3.${{ inputs.python_minor }}*" | head -n 1)
-          
-          echo "Searched for Python ${{ inputs.python_minor }} site-packages directory"
-          echo "Found: $SITE_PACKAGES_DIR"
-          
-          if [ -z "$SITE_PACKAGES_DIR" ]; then
-            echo "Error: Could not find Python ${{ inputs.python_minor }} site-packages directory"
-            echo "Available Python directories:"
-            find $(conda info --base)/envs/pytorch_env/lib -maxdepth 1 -type d -name "python*"
-            exit 1
-          fi
-          
-          # Copy site-packages (our installed dependencies)
-          mkdir -p packaged_env/lib/$(basename $SITE_PACKAGES_DIR)/site-packages
-          cp -R $SITE_PACKAGES_DIR/site-packages/* packaged_env/lib/$(basename $SITE_PACKAGES_DIR)/site-packages/
-          
-          # Copy our wheel files
-          cp -R mac_arm_python_deps packaged_env/
+      - name: Verify PyTorch installation
+        run: |
+          source packaged_env/bin/activate
+          python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
+          python -c "import torch; print(f'PyTorch installation directory: {torch.__file__}')"
+          python -c "import torchvision; print(f'torchvision version: {torchvision.__version__}')"
+          python -c "import torchaudio; print(f'torchaudio version: {torchaudio.__version__}')"
 
-          tar czf mac_arm_python_env.tar.gz packaged_env
+      - name: Package environment
+        run: |
+          tar -czf mac_arm_python_env.tar.gz packaged_env
+
+      - name: Verify package contents and size
+        run: |
+          echo "Package size:"
+          du -sh mac_arm_python_env.tar.gz
+          
+          echo "Contents of the package:"
+          tar -tvf mac_arm_python_env.tar.gz | sort -k 5 -n | tail -n 20
+          
+          echo "Total number of files:"
+          tar -tvf mac_arm_python_env.tar.gz | wc -l
+          
+          echo "Size of packaged_env directory before compression:"
+          du -sh packaged_env
+          
+          echo "Largest directories in packaged_env:"
+          du -sh packaged_env/* | sort -hr | head -n 10
+
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
@@ -77,17 +75,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: mac-arm-deps-py${{ inputs.python_minor }}
-          release_name: Mac ARM Dependencies Python ${{ inputs.python_minor }}
+          tag_name: mac-arm-deps-py3.${{ inputs.python_minor }}-${{ steps.date.outputs.date }}
+          release_name: Mac ARM Dependencies Python 3.${{ inputs.python_minor }} (${{ steps.date.outputs.date }})
           body: |
-            Mac ARM dependencies for Python ${{ inputs.python_minor }} with PyTorch nightly
+            Mac ARM dependencies with Nightly PyTorch
             
             Includes:
-            - Python 3.${{ inputs.python_minor }}
-            - PyTorch nightly dependencies
+            - Python 3.${{ inputs.python_minor }} virtual environment
+            - PyTorch (Nightly build)
             - ComfyUI requirements
           draft: false
-          prerelease: true
+          prerelease: false
 
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
