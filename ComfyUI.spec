@@ -1,3 +1,4 @@
+
 # -*- mode: python ; coding: utf-8 -*-
 
 import os
@@ -15,8 +16,7 @@ def include_folder(folder_name):
             relative_path = os.path.relpath(full_path, start=os.getcwd())
             # Ensure the destination path doesn't include the filename as a directory
             destination_path = os.path.dirname(relative_path)
-            files_to_inclu
-            de.append((full_path, destination_path))
+            files_to_include.append((full_path, destination_path))
     return files_to_include
 
 spandrel_datas, spandrel_binaries, spandrel_hiddenimports = collect_all('spandrel')
