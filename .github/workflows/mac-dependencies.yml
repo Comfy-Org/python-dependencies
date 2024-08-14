@@ -57,7 +57,6 @@ jobs:
           cp ComfyUI.spec ComfyUI/
           cd ComfyUI
           pyinstaller ComfyUI.spec
-          tar -czf mac_arm_python_env.tar.gz dist
 
       - name: Get current date
         id: date
@@ -79,5 +78,5 @@ jobs:
             - ComfyUI requirements
           draft: false
           prerelease: true
-          artifacts: "ComfyUI/mac_arm_python_env.tar.gz"
+          artifacts: "ComfyUI/dist/*"
           token: ${{ secrets.GITHUB_TOKEN }}
