@@ -67,12 +67,12 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          tag: mac-arm-deps-py3.${{ inputs.python_minor }}-${{ steps.date.outputs.date }}
-          name: Mac ARM Dependencies Python 3.${{ inputs.python_minor }} (${{ steps.date.outputs.date }})
+          tag: mac-arm-deps-py3.${{ inputs.python_minor }}-${{ steps.date.outputs.datetime }}
+          name: Mac ARM Dependencies Python 3.${{ inputs.python_minor }} (${{ steps.date.outputs.datetime }})
           body: |
             Mac ARM dependencies with Nightly PyTorch
             
-            Build Date: ${{ steps.date.outputs.date }}
+            Build Date: ${{ steps.date.outputs.datetime }}
             
             Includes:
             - Python 3.${{ inputs.python_minor }} virtual environment
