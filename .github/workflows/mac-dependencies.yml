@@ -79,5 +79,5 @@ jobs:
             - ComfyUI requirements
           draft: false
           prerelease: true
-          artifacts: "mac_arm_python_env.tar.gz"
+          artifacts: "ComfyUI/mac_arm_python_env.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
