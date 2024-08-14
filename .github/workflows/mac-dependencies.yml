@@ -33,7 +33,7 @@ jobs:
       - name: Install PyTorch nightly
         run: |
           source packaged_env/bin/activate
-          pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
+          pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
 
       - name: Fetch and install ComfyUI requirements
         run: |
@@ -57,12 +57,11 @@ jobs:
           cp ComfyUI.spec ComfyUI/
           cd ComfyUI
           pyinstaller ComfyUI.spec
-          tar -czf mac_arm_python_env.tar.gz dist/ComfyUI
+          tar -czf mac_arm_python_env.tar.gz dist
 
       - name: Get current date
         id: date
         run: echo "datetime=$(date +'%Y-%m-%d-%H%M%S')" >> $GITHUB_OUTPUT
-
 
       - name: Create Release
         uses: ncipollo/release-action@v1
