@@ -53,11 +53,11 @@ jobs:
         run: |
           source packaged_env/bin/activate
           pip install pyinstaller
-          pip list
           git clone https://github.com/comfyanonymous/ComfyUI --depth 1
           cp ComfyUI.spec ComfyUI/
           cd ComfyUI
           pyinstaller ComfyUI.spec
+          tar -czf mac_arm_python_env.tar.gz dist
 
       - name: Get current date
         id: date
@@ -79,5 +79,5 @@ jobs:
             - ComfyUI requirements
           draft: false
           prerelease: true
-          artifacts: "ComfyUI/dist/*"
+          artifacts: "ComfyUI/mac_arm_python_env.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
