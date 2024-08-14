@@ -51,24 +51,13 @@ jobs:
 
       - name: Package environment
         run: |
-          tar -czf mac_arm_python_env.tar.gz packaged_env
-
-      - name: Verify package contents and size
-        run: |
-          echo "Package size:"
-          du -sh mac_arm_python_env.tar.gz
-          
-          echo "Contents of the package:"
-          tar -tvf mac_arm_python_env.tar.gz | sort -k 5 -n | tail -n 20
-          
-          echo "Total number of files:"
-          tar -tvf mac_arm_python_env.tar.gz | wc -l
-          
-          echo "Size of packaged_env directory before compression:"
-          du -sh packaged_env
-          
-          echo "Largest directories in packaged_env:"
-          du -sh packaged_env/* | sort -hr | head -n 10
+          source packaged_env/bin/activate
+          pip install pyinstaller
+          git clone https://github.com/comfyanonymous/ComfyUI --depth 1
+          cp ComfyUI.spec ComfyUI/
+          cd ComfyUI
+          pyinstaller ComfyUI.spec
+          tar -czf mac_arm_python_env.tar.gz dist/ComfyUI
 
       - name: Get current date
         id: date
