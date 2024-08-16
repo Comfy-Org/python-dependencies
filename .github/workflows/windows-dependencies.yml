@@ -1,4 +1,4 @@
-name: "Windows Release Dependencies"
+name: "Embedded Windows Release Dependencies"
 on:
   workflow_dispatch:
     inputs:
@@ -74,7 +74,7 @@ jobs:
           artifacts: "./windows_python_deps.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: windows-deps-cu${{ inputs.cu }}-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
-          name: Embeded Windows Dependencies CUDA ${{ inputs.cu }} Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
+          name: Embedded Windows Dependencies CUDA ${{ inputs.cu }} Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
           body: |
             Windows dependencies for CUDA ${{ inputs.cu }} and Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
             
