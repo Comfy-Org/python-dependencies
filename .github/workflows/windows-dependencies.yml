@@ -69,13 +69,12 @@ jobs:
           Compress-Archive -Path python_embedded, requirements.txt -DestinationPath windows_python_deps.zip
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
+          artifacts: "./windows_python_deps.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: windows-deps-cu${{ inputs.cu }}-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
-          release_name: Windows Dependencies CUDA ${{ inputs.cu }} Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
+          name: Embeded Windows Dependencies CUDA ${{ inputs.cu }} Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
           body: |
             Windows dependencies for CUDA ${{ inputs.cu }} and Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
             
@@ -85,13 +84,3 @@ jobs:
             - ComfyUI requirements
           draft: false
           prerelease: true
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./windows_python_deps.zip
-          asset_name: windows_python_deps.zip
-          asset_content_type: application/zip
