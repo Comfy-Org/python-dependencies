@@ -61,7 +61,7 @@ jobs:
           git clone https://github.com/comfyanonymous/ComfyUI --depth 1
           cp ${{ inputs.spec_file }} ComfyUI/
           cd ComfyUI
-          pyinstaller ${{ inputs.spec_file }} --onefile
+          pyinstaller ${{ inputs.spec_file }}
           tar -czf mac_arm_python_env.tar.gz dist
 
       - name: Get current date
