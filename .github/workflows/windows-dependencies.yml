@@ -40,40 +40,36 @@ jobs:
           curl https://www.python.org/ftp/python/3.${{ inputs.python_minor }}.${{ inputs.python_patch }}/python-3.${{ inputs.python_minor }}.${{ inputs.python_patch }}-embed-amd64.zip -o python_embedded.zip
           unzip python_embedded.zip -d python_embedded
           cd python_embedded
-          
-          # Enable site-packages
-          sed -i 's/#import site/import site/' python*._pth
-
-      - name: Set up Python environment
-        shell: bash
-        run: |
-          cd python_embedded
-          ./python.exe -m ensurepip
-          ./python.exe -m pip install --upgrade pip
-
-      - name: Fetch ComfyUI requirements
-        shell: bash
-        run: |
+          echo 'import site' >> ./python3${{ inputs.python_minor }}._pth
+          curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+          ./python.exe get-pip.py
           curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
+          ./python.exe -s -m pip install -r requirements.txt
+          sed -i '1i../ComfyUI' ./python3${{ inputs.python_minor }}._pth          
 
-      - name: Install dependencies
-        shell: bash
-        run: |
-          cd python_embedded
-          ./python.exe -m pip install torch torchvision torchaudio ${{ inputs.xformers }} --extra-index-url https://download.pytorch.org/whl/cu${{ inputs.cu }}
-          ./python.exe -m pip install ${{ inputs.extra_dependencies }} -r ../requirements.txt pygit2
+          ./python.exe -m pip install torch torchvision torchaudio ${{ inputs.xformers }} ${{ inputs.extra_dependencies }} --extra-index-url https://download.pytorch.org/whl/cu${{ inputs.cu }} -r ../requirements.txt pygit2
 
-      - name: Package dependencies
-        shell: pwsh
-        run: |
-          Compress-Archive -Path python_embedded, requirements.txt -DestinationPath windows_python_deps.zip
+          cd ../
 
+          git clone https://github.com/comfyanonymous/ComfyUI --depth 1
+          git clone --depth 1 https://github.com/comfyanonymous/taesd
+          cp taesd/*.pth ./ComfyUI/models/vae_approx/
+
+          mkdir ComfyUI_windows_portable
+          mv ComfyUI ComfyUI_windows_portable
+          mv python_embedded ComfyUI_windows_portable
+          "C:\Program Files\7-Zip\7z.exe" a -t7z -m0=lzma2 -mx=8 -mfb=64 -md=32m -ms=on -mf=BCJ2 ComfyUI_windows_portable.7z ComfyUI_windows_portable
+          
+          cd ComfyUI_windows_portable
+          python_embeded/python.exe -s ComfyUI/main.py --quick-test-for-ci --cpu
+
+          ls
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./windows_python_deps.zip"
+          artifacts: "./ComfyUI_windows_portable.7z"
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: windows-deps-cu${{ inputs.cu }}-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
+          tag_name: embedded-windows-deps-cu${{ inputs.cu }}-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
           name: Embedded Windows Dependencies CUDA ${{ inputs.cu }} Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
           body: |
             Windows dependencies for CUDA ${{ inputs.cu }} and Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
