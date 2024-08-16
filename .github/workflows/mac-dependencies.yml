@@ -2,6 +2,11 @@ name: "Mac ARM Release Dependencies with Nightly PyTorch"
 on:
   workflow_dispatch:
     inputs:
+      spec_file:
+        description: 'spec file'
+        required: true
+        type: string
+        default: "ComfyUI.spec"
       python_minor:
         description: 'python minor version'
         required: true
@@ -54,9 +59,9 @@ jobs:
           source packaged_env/bin/activate
           pip install pyinstaller
           git clone https://github.com/comfyanonymous/ComfyUI --depth 1
-          cp ComfyUI.spec ComfyUI/
+          cp ${{ inputs.spec_file }} ComfyUI/
           cd ComfyUI
-          pyinstaller ComfyUI.spec --onefile
+          pyinstaller ${{ inputs.spec_file }} --onefile
           tar -czf mac_arm_python_env.tar.gz dist
 
       - name: Get current date
