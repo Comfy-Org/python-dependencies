@@ -37,21 +37,18 @@ jobs:
       - name: Download and extract embedded Python
         shell: bash
         run: |
+          git clone https://github.com/comfyanonymous/ComfyUI --depth 1
+
           curl https://www.python.org/ftp/python/3.${{ inputs.python_minor }}.${{ inputs.python_patch }}/python-3.${{ inputs.python_minor }}.${{ inputs.python_patch }}-embed-amd64.zip -o python_embedded.zip
           unzip python_embedded.zip -d python_embedded
           cd python_embedded
           echo 'import site' >> ./python3${{ inputs.python_minor }}._pth
           curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
           ./python.exe get-pip.py
-          curl -o requirements.txt https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt
-          ./python.exe -s -m pip install -r requirements.txt
+          ./python.exe -m pip install torch torchvision torchaudio ${{ inputs.xformers }} ${{ inputs.extra_dependencies }} --extra-index-url https://download.pytorch.org/whl/cu${{ inputs.cu }} -r ../ComfyUI/requirements.txt pygit2
           sed -i '1i../ComfyUI' ./python3${{ inputs.python_minor }}._pth          
 
-          ./python.exe -m pip install torch torchvision torchaudio ${{ inputs.xformers }} ${{ inputs.extra_dependencies }} --extra-index-url https://download.pytorch.org/whl/cu${{ inputs.cu }} -r ../requirements.txt pygit2
-
           cd ../
-
-          git clone https://github.com/comfyanonymous/ComfyUI --depth 1
           git clone --depth 1 https://github.com/comfyanonymous/taesd
           cp taesd/*.pth ./ComfyUI/models/vae_approx/
 
