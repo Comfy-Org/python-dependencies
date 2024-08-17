@@ -1,0 +1,88 @@
+name: "Windows Release Dependencies with Nightly PyTorch"
+on:
+  workflow_dispatch:
+    inputs:
+      spec_file:
+        description: 'spec file'
+        required: true
+        type: string
+        default: "ComfyUI.spec"
+      python_minor:
+        description: 'python minor version'
+        required: true
+        type: string
+        default: "12"
+      extra_dependencies:
+        description: 'extra dependencies'
+        required: false
+        type: string
+        default: "\"numpy<2\""
+
+jobs:
+  build_and_release_dependencies:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.${{ inputs.python_minor }}'
+
+      - name: Create virtual environment
+        run: |
+          python -m venv packaged_env
+          .\packaged_env\Scripts\Activate.ps1
+          python -m pip install --upgrade pip
+
+      - name: Install PyTorch nightly
+        run: |
+          .\packaged_env\Scripts\Activate.ps1
+          pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
+
+      - name: Fetch and install ComfyUI requirements
+        run: |
+          .\packaged_env\Scripts\Activate.ps1
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt -OutFile requirements.txt
+          pip install ${{ inputs.extra_dependencies }} -r requirements.txt
+
+      - name: Verify PyTorch installation
+        run: |
+          .\packaged_env\Scripts\Activate.ps1
+          python -c "import torch; print(f'PyTorch version: {torch.__version__}')"
+          python -c "import torch; print(f'PyTorch installation directory: {torch.__file__}')"
+          python -c "import torchvision; print(f'torchvision version: {torchvision.__version__}')"
+          python -c "import torchaudio; print(f'torchaudio version: {torchaudio.__version__}')"
+
+      - name: Package environment
+        run: |
+          .\packaged_env\Scripts\Activate.ps1
+          pip install pyinstaller
+          git clone https://github.com/comfyanonymous/ComfyUI --depth 1
+          Copy-Item ${{ inputs.spec_file }} -Destination ComfyUI\
+          cd ComfyUI
+          pyinstaller ${{ inputs.spec_file }}
+          Compress-Archive -Path dist -DestinationPath windows_python_env.zip
+
+      - name: Get current date
+        id: date
+        run: echo "datetime=$(Get-Date -Format 'yyyy-MM-dd-HHmmss')" >> $env:GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: windows-deps-py3.${{ inputs.python_minor }}-${{ steps.date.outputs.datetime }}
+          name: Windows Dependencies Python 3.${{ inputs.python_minor }} (${{ steps.date.outputs.datetime }})
+          body: |
+            Windows dependencies with Nightly PyTorch
+            
+            Build Date: ${{ steps.date.outputs.datetime }}
+            
+            Includes:
+            - Python 3.${{ inputs.python_minor }} virtual environment
+            - PyTorch (Nightly build)
+            - ComfyUI requirements
+          draft: false
+          prerelease: true
+          artifacts: "ComfyUI/windows_python_env.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
