@@ -77,7 +77,7 @@ jobs:
       - name: Get current date
         id: date
         shell: bash
-        run: echo "datetime=$(Get-Date -Format 'yyyy-MM-dd-HHmmss')" >> $env:GITHUB_OUTPUT
+        run: echo "datetime=$(date +'%Y-%m-%d-%H%M%S')" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: ncipollo/release-action@v1
