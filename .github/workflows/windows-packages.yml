@@ -6,7 +6,7 @@ on:
         description: 'spec file'
         required: true
         type: string
-        default: "ComfyUI.spec"
+        default: "ComfyUI-onefile.spec"
       python_minor:
         description: 'python minor version'
         required: true
