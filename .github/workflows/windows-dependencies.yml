@@ -60,13 +60,11 @@ jobs:
           cd ComfyUI_windows_portable
           python_embedded/python.exe -s ComfyUI/main.py --quick-test-for-ci --cpu
 
-          ls
+          cd ../ && ls
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./ComfyUI_windows_portable.7z"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: embedded-windows-deps-cu${{ inputs.cu }}-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
+          tag: embedded-windows-deps-cu${{ inputs.cu }}-py${{ inputs.python_minor }}.${{ inputs.python_patch }}-${{ github.run_number }}
           name: Embedded Windows Dependencies CUDA ${{ inputs.cu }} Python ${{ inputs.python_minor }}.${{ inputs.python_patch }} (Build ${{ github.run_number }})
           body: |
             Windows dependencies for CUDA ${{ inputs.cu }} and Python ${{ inputs.python_minor }}.${{ inputs.python_patch }}
@@ -77,3 +75,5 @@ jobs:
             - ComfyUI requirements
           draft: false
           prerelease: true
+          artifacts: "ComfyUI_windows_portable.7z"
+          token: ${{ secrets.GITHUB_TOKEN }}
