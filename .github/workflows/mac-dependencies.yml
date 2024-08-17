@@ -81,7 +81,9 @@ jobs:
             Includes:
             - Python 3.${{ inputs.python_minor }} virtual environment
             - PyTorch (Nightly build)
+            - Spec File ${{ inputs.spec_file }}
             - ComfyUI requirements
+            - Extra dependencies: ${{ inputs.extra_dependencies }}
           draft: false
           prerelease: true
           artifacts: "ComfyUI/mac_arm_python_env.tar.gz"
