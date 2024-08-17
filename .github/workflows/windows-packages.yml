@@ -60,6 +60,7 @@ jobs:
           python -c "import torchaudio; print(f'torchaudio version: {torchaudio.__version__}')"
 
       - name: Package environment
+        shell: bash
         run: |
           .\packaged_env\Scripts\Activate.ps1
           pip install pyinstaller
@@ -71,6 +72,7 @@ jobs:
 
       - name: Get current date
         id: date
+        shell: bash
         run: echo "datetime=$(Get-Date -Format 'yyyy-MM-dd-HHmmss')" >> $env:GITHUB_OUTPUT
 
       - name: Create Release
