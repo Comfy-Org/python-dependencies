@@ -60,7 +60,6 @@ jobs:
           python -c "import torchaudio; print(f'torchaudio version: {torchaudio.__version__}')"
 
       - name: Package environment
-        shell: bash
         run: |
           .\packaged_env\Scripts\Activate.ps1
           pip install pyinstaller
@@ -68,6 +67,11 @@ jobs:
           Copy-Item ${{ inputs.spec_file }} -Destination ComfyUI\
           cd ComfyUI
           pyinstaller ${{ inputs.spec_file }}
+      
+      - name: Zip environment
+        shell: bash
+        run: |
+          cd ComfyUI
           "C:\Program Files\7-Zip\7z.exe" a -t7z -m0=lzma2 -mx=8 -mfb=64 -md=32m -ms=on -mf=BCJ2 windows_python_env.7z dist
 
       - name: Get current date
