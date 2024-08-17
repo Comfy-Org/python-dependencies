@@ -1,4 +1,4 @@
-name: "Windows Release Dependencies with Nightly PyTorch"
+name: "Windows Release Dependencies with Stable PyTorch"
 on:
   workflow_dispatch:
     inputs:
@@ -40,7 +40,7 @@ jobs:
           .\packaged_env\Scripts\Activate.ps1
           python -m pip install --upgrade pip
 
-      - name: Install PyTorch nightly
+      - name: Install PyTorch Stable
         run: |
           .\packaged_env\Scripts\Activate.ps1
           pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu${{ inputs.cu }}
