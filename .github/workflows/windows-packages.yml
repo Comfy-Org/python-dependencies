@@ -48,7 +48,7 @@ jobs:
       - name: Fetch and install ComfyUI requirements
         run: |
           .\packaged_env\Scripts\Activate.ps1
-          Invoke-WebRequest -Uri https://raw.githubusercontent.com/comfyanonymous/ComfyUI/master/requirements.txt -OutFile requirements.txt
+          Invoke-WebRequest -Uri https://raw.githubusercontent.com/Comfy-Org/ComfyUI/master/requirements.txt -OutFile requirements.txt
           pip install ${{ inputs.extra_dependencies }} -r requirements.txt
 
       - name: Verify PyTorch installation
@@ -63,7 +63,7 @@ jobs:
         run: |
           .\packaged_env\Scripts\Activate.ps1
           pip install pyinstaller
-          git clone https://github.com/comfyanonymous/ComfyUI --depth 1
+          git clone https://github.com/Comfy-Org/ComfyUI --depth 1
           Copy-Item ${{ inputs.spec_file }} -Destination ComfyUI\
           cd ComfyUI
           pyinstaller ${{ inputs.spec_file }}

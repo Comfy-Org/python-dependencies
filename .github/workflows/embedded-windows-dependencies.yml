@@ -37,7 +37,7 @@ jobs:
       - name: Download and extract embedded Python
         shell: bash
         run: |
-          git clone https://github.com/comfyanonymous/ComfyUI --depth 1
+          git clone https://github.com/Comfy-Org/ComfyUI --depth 1
 
           curl https://www.python.org/ftp/python/3.${{ inputs.python_minor }}.${{ inputs.python_patch }}/python-3.${{ inputs.python_minor }}.${{ inputs.python_patch }}-embed-amd64.zip -o python_embedded.zip
           unzip python_embedded.zip -d python_embedded
